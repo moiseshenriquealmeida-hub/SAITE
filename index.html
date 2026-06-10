@@ -3,11 +3,180 @@
 
 <html lang="pt-br">
     <head>
-        <title> MOISES BLOG </title>
-        <meta charset="UTF-8" >
+        <title>MOISES BLOG</title>
+        <meta charset="UTF-8">
         <meta name="VIEW" content="width=1280 initial-scale=1.0">
+        <link href="/style.css" rel="stylesheet" type="text/css" media="all">
     </head>
     <body>
-        <h1>OPSDKPAJLLNFJKDHFSGDHFOOF</h1>
+        <script>
+            const WinW = 1280*1.25
+            const WinH = 720*1.25
+            const Canvas = document.createElement("canvas");
+            const CanvasContext = Canvas.getContext("2d")
+            var Time = 0
+            var LastTime = 0;
+            var Delta = 0;
+
+
+            Canvas.id = "SaiteCanvas";
+            Canvas.width = WinW;
+            Canvas.height = WinH;
+
+
+            document.children[0].appendChild(Canvas);
+            CanvasContext.imageSmoothingEnabled = false;
+            CanvasContext.filter = 'none';
+
+
+            const EUImg = createImage("./EU.png", 407, 410)
+
+
+            function SiteLoop(CurrentTime) {
+                Delta = clamp((CurrentTime - LastTime) / 1000, 0, 0.1);
+                LastTime = CurrentTime;
+
+
+                CanvasContext.clearRect(0, 0, Canvas.width, Canvas.height);
+
+
+                const MainTextSpeedUp = 2
+                var FontSize = 86 + 8 * Math.cos(Time * MainTextSpeedUp)
+                CanvasContext.font = String(FontSize) + "px 'Vhs Gothic'"
+                CanvasContext.textAlign = "center"
+
+
+                const TotalRep = 10 + 5 * Math.cos(Time * MainTextSpeedUp / 2)
+                for (var r=0; r<TotalRep; r++) {
+                    CanvasContext.save()
+                        const DrawnText = "ESSE É O MEU SAITE"
+                        const TextSize = CanvasContext.measureText(DrawnText)
+                        CanvasContext.fillStyle = 'hsl(0, 0%, ' + String(100 * (r / TotalRep)) + '%)'
+
+
+                        CanvasContext.translate(Canvas.width / 2 + (2 * r * Math.cos(Time * MainTextSpeedUp)), FontSize + (2 * r * Math.sin(Time * MainTextSpeedUp)))
+                        CanvasContext.rotate(0.1 * Math.sin(Time * MainTextSpeedUp))
+
+
+                        CanvasContext.fillText(DrawnText, 0, FontSize)
+                    CanvasContext.restore()
+                }
+
+
+                CanvasContext.font = String(32) + "px PixelOperator"
+                CanvasContext.fillStyle = "white"
+                CanvasContext.textAlign = "left"
+                CanvasContext.save()
+                    CanvasContext.translate(256, 512)
+                    CanvasContext.rotate(0.05 * Math.sin(Time))
+                    CanvasContext.scale(1 + 0.05 * Math.cos(Time), 1 + 0.05 * Math.sin(Time / 2))
+                    CanvasContext.drawImage(EUImg, -EUImg.width / 2, -EUImg.height / 2)
+                CanvasContext.restore()
+
+
+                CanvasContext.fillStyle = "black"
+                CanvasContext.fillText("EU NÃO TO SENDO PRESO, OK?", 8+2, 512 + EUImg.height / 2+2)
+                CanvasContext.fillStyle = "white"
+                CanvasContext.fillText("EU NÃO TO SENDO PRESO, OK?", 8, 512 + EUImg.height / 2)
+
+
+                CanvasContext.font = String(128) + "px PixelOperator"
+                CanvasContext.textAlign = "center"
+                CanvasContext.fillText("^ EU ^", EUImg.width / 2, 512 + 32 + EUImg.height / 2 + 128 + 16 * Math.sin(Time))
+
+
+                CanvasContext.font = String(32) + "px PixelOperator"
+
+
+                const MEInfos = [
+                    {
+                        Text: "Meu nome é Moises Henrique de Almeida",
+                        SubTxt: "Tem um acento em algum lugar mas eu não sei aonde",
+                    },
+                    {
+                        Text: "Faço jogo indie ruim ja faz uns 4 anos",
+                        SubTxt: "Sem game engine inclusive",
+                    },
+                    {
+                        Text: "Eu desenho",
+                        SubTxt: "Não é bom",
+                    },
+                    {
+                        Text: "Sei como usar Game Maker, Godot, Allegro 5, Raylib e SFML para fazer jogos",
+                        SubTxt: "Não recomendo aprender todos >:(",
+                    },
+                    {
+                        Text: "Sei como programar em C, C++, C#, Python, Javascript, Zig, D e Odin",
+                        SubTxt: "Não recomendo aprender todos :)",
+                    },
+                ]
+
+
+                CanvasContext.textAlign = "center"
+                var CurrentY = Canvas.height / 4;
+                for (var i=0; i < MEInfos.length; i++) {
+                    CanvasContext.save()
+
+
+                    const CurrentInfo = MEInfos[i]
+                    
+                    
+                    var TextMes = CanvasContext.measureText(CurrentInfo.Text)
+                    var FontSize = 45 * (Canvas.width / 2) / TextMes.width
+                    CanvasContext.font = String(FontSize) + "px PixelOperator"
+                    TextMes = CanvasContext.measureText(CurrentInfo.Text)
+                    CurrentY += (clamp(FontSize, 64+32, 128+64))
+                    CanvasContext.translate(Canvas.width - TextMes.width / 2 - 16 + 16 * Math.sin(Time + (i/2)), CurrentY)
+
+
+                    CanvasContext.fillText(CurrentInfo.Text, 0, 0)
+
+
+                    CanvasContext.font = String(32) + "px PixelOperator"
+                    var DrawnSubTxt = "(" + CurrentInfo.SubTxt + ")"
+
+
+                    var EndChar = CurrentInfo.SubTxt.charAt(CurrentInfo.SubTxt.length - 1)
+                    if (EndChar == ")" || EndChar == "(") {DrawnSubTxt = CurrentInfo.SubTxt}
+                    
+                    
+                    CanvasContext.fillText(DrawnSubTxt, 0, 32)
+
+
+                    CanvasContext.restore()
+                }
+
+
+                Time += 1 * Delta
+                requestAnimationFrame(SiteLoop)
+            }
+
+
+            //Funções pra me ajudar a não ficar louco
+
+
+            function createImage(src, width, height, alt) {
+                let img = document.createElement("img");
+
+
+                img.src = src;
+                img.width = width;
+                img.height = height;
+                img.alt = alt;
+
+
+                return img;
+            }
+            function clamp(num, min, max) {
+                return num <= min 
+                ? min 
+                : num >= max 
+                ? max 
+                : num
+            }
+
+
+            requestAnimationFrame(SiteLoop)
+        </script>
     </body>
 </html>
