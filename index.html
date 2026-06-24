@@ -11,12 +11,48 @@
     <body>
         <script>
             const WinW = 1280*1.25
-            const WinH = 720*1.25
+            const WinH = 720*1.5
             const Canvas = document.createElement("canvas");
             const CanvasContext = Canvas.getContext("2d")
             var Time = 0
             var LastTime = 0;
             var Delta = 0;
+            var MouseX = 0;
+            var MouseY = 0;
+            var MousePressed = false
+
+
+            class Button {
+                constructor(x, y, w, h, text, func) {
+                    this.x = x
+                    this.y = y
+                    this.w = w
+                    this.h = h
+                    this.text = text
+                    this.hovered = false
+                    this.func = func
+                }
+
+
+                Update() {
+                    this.hovered = MouseX >= this.x && MouseX < this.x + this.w && MouseY > this.y && MouseY  < this.y + this.h
+
+
+                    if (this.hovered && MousePressed) {
+                        this.func()
+                    }
+                }
+
+
+                Draw() {
+                    CanvasContext.fillStyle = "white"
+                    CanvasContext.fillRect(this.x, this.y, this.w, this.h)
+
+
+                    const Size = CanvasContext.measureText(this.text)
+                    CanvasContext.fillText(this.text, this.x + this.w / 2 - Size.width / 2, this.y + this.h / 2 - CanvasContext.font)
+                }
+            }
 
 
             Canvas.id = "SaiteCanvas";
@@ -119,8 +155,8 @@
 
 
                     const CurrentInfo = MEInfos[i]
-                    
-                    
+
+
                     var TextMes = CanvasContext.measureText(CurrentInfo.Text)
                     var FontSize = 45 * (Canvas.width / 2) / TextMes.width
                     CanvasContext.font = String(FontSize) + "px PixelOperator"
@@ -138,8 +174,8 @@
 
                     var EndChar = CurrentInfo.SubTxt.charAt(CurrentInfo.SubTxt.length - 1)
                     if (EndChar == ")" || EndChar == "(") {DrawnSubTxt = CurrentInfo.SubTxt}
-                    
-                    
+
+
                     CanvasContext.fillText(DrawnSubTxt, 0, 32)
 
 
@@ -168,10 +204,10 @@
                 return img;
             }
             function clamp(num, min, max) {
-                return num <= min 
-                ? min 
-                : num >= max 
-                ? max 
+                return num <= min
+                ? min
+                : num >= max
+                ? max
                 : num
             }
 
