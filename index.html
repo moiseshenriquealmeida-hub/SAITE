@@ -17,6 +17,42 @@
             var Time = 0
             var LastTime = 0;
             var Delta = 0;
+            var MouseX = 0;
+            var MouseY = 0;
+            var MousePressed = false
+
+
+            class Button {
+                constructor(x, y, w, h, text, func) {
+                    this.x = x
+                    this.y = y
+                    this.w = w
+                    this.h = h
+                    this.text = text
+                    this.hovered = false
+                    this.func = func
+                }
+
+
+                Update() {
+                    this.hovered = MouseX >= this.x && MouseX < this.x + this.w && MouseY > this.y && MouseY  < this.y + this.h
+
+                    
+                    if (this.hovered && MousePressed) {
+                        this.func()
+                    }
+                }
+
+
+                Draw() {
+                    CanvasContext.fillStyle = "white"
+                    CanvasContext.fillRect(this.x, this.y, this.w, this.h)
+
+
+                    const Size = CanvasContext.measureText(this.text)
+                    CanvasContext.fillText(this.text, this.x + this.w / 2 - Size.width / 2, this.y + this.h / 2 - CanvasContext.font)
+                }
+            }
 
 
             Canvas.id = "SaiteCanvas";
