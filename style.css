@@ -37,7 +37,7 @@ canvas {
   margin-right: auto;
   margin-top: auto;
   margin-bottom: auto;
-  cursor: none;
+  /*cursor: none;*/
   display: block;
   width: 1280px;
   height: 720px;

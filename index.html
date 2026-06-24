@@ -20,44 +20,81 @@
             var MouseX = 0;
             var MouseY = 0;
             var MousePressed = false
+            var Buttons = []
+
+
+            Canvas.addEventListener("click", MouseClick)
+            Canvas.addEventListener("mousemove", MouseMove)
 
 
             class Button {
-                constructor(x, y, w, h, text, func) {
+                constructor(x, y, w, h, text, pressFunc) {
                     this.x = x
                     this.y = y
                     this.w = w
                     this.h = h
-                    this.text = text
+                    this.wAdd = 0
+                    this.hAdd = 0
                     this.hovered = false
-                    this.func = func
+                    this.text = text
+                    this.rot = 0
+                    this.pressFunc = pressFunc
+                    Buttons.push(this)
                 }
-
-
+                
+                
                 Update() {
-                    this.hovered = MouseX >= this.x && MouseX < this.x + this.w && MouseY > this.y && MouseY  < this.y + this.h
-
-<<<<<<< HEAD
-
-=======
+                    const usedX = this.x - (this.w + this.wAdd) / 2
+                    const usedY = this.y - (this.h + this.hAdd) / 2
+                    const hover = MousePos.x > usedX && MousePos.x < usedX + (this.w + this.wAdd) && MousePos.y > usedY && MousePos.y < usedY + (this.h + this.hAdd)
                     
->>>>>>> c44a17af8964673339b678c1e24a60ef1d26eb89
-                    if (this.hovered && MousePressed) {
-                        this.func()
+                    
+                    if (!this.hovered && hover) {
+                        this.wAdd = this.w * 1.25
+                        this.hAdd = this.h * 1.25
                     }
+                    if (this.hovered && !hover) {
+                        this.wAdd = -this.w * 0.25
+                        this.hAdd = -this.h * 0.25
+                    }
+                    
+                    
+                    this.hovered = hover
+                
+                    
+                    if (this.hovered) {
+                        this.rot += (OldMousePos.x - MousePos.x) / 500
+                        
+                        
+                        if (MouseClicked && !OldMouseClicked) {
+                            this.wAdd = -this.w * 0.25
+                            this.hAdd = -this.h * 0.25
+                            this.pressFunc()
+                        }
+                    }
+                    
+                    
+                    this.rot = lerp(this.rot, 0, 6)
+                    this.wAdd = lerp(this.wAdd, 0, 6)
+                    this.hAdd = lerp(this.hAdd, 0, 6)
                 }
-
-
+                
+                
                 Draw() {
+                    CanvasContext.fillStyle = "black"
+                //    CanvasContext.rotate(this.rot)
+                    CanvasContext.fillRect(this.x - (this.w + this.wAdd) / 2, this.y - (this.h + this.hAdd) / 2, this.w + this.wAdd, this.h + this.hAdd)
+                    CanvasContext.strokeStyle = "white"
                     CanvasContext.fillStyle = "white"
-                    CanvasContext.fillRect(this.x, this.y, this.w, this.h)
-
-
-                    const Size = CanvasContext.measureText(this.text)
-                    CanvasContext.fillText(this.text, this.x + this.w / 2 - Size.width / 2, this.y + this.h / 2 - CanvasContext.font)
+                    CanvasContext.strokeRect(this.x - (this.w + this.wAdd) / 2, this.y - (this.h + this.hAdd) / 2, this.w + this.wAdd, this.h + this.hAdd)
+                    
+                    
+                    const scl = (this.w + this.wAdd) / this.w
+                    CanvasContext.font = String(64 * scl) + "px PixelOperator";
+                    CanvasContext.fillText(this.text, this.x, this.y + 16)
+                //    CanvasContext.rotate(-this.rot)
                 }
-            }
-
+                }
 
             Canvas.id = "SaiteCanvas";
             Canvas.width = WinW;
@@ -69,7 +106,61 @@
             CanvasContext.filter = 'none';
 
 
+            var Scroll = 0;
+            var WantedScroll = 0;
+            var MouseClicked = false
+            var OldMouseClicked = false
+            var MousePos = {x: 0, y: 0}
+            var OldMousePos = {x: 0, y: 0}
+            CanvasContext.lineJoin = "round"
+            CanvasContext.lineWidth = 4
+
+
+            function MouseClick(ev) {
+                MouseClicked = true
+            }
+            function MouseMove(ev) {
+                //EXISTEM RAZÕES DO PORQUE EU ODEIO JAVASCRIPT
+
+
+                const rect = Canvas.getBoundingClientRect();
+
+                
+                const scaleX = Canvas.width / rect.width;
+                const scaleY = Canvas.height / rect.height;
+
+
+                OldMousePos.x = MousePos.x;
+                OldMousePos.y = MousePos.y;
+
+                
+                MousePos.x = (ev.clientX - rect.left) * scaleX;
+                MousePos.y = (ev.clientY - rect.top) * scaleY;
+            }
+
+
             const EUImg = createImage("./EU.png", 407, 410)
+            var Likes = 0
+
+
+            var BgColor = "black"
+            var WantedBgColor = {r: 0, g: 0, b: 0}
+            var StructBgColor = {r: 0, g: 0, b: 0}
+
+
+            const BtnW = 128
+            const BtnH = 64
+            const BtnPos = {x : WinW / 2, y : WinH - BtnH - 16}
+            new Button(BtnPos.x - BtnW * 2, BtnPos.y, BtnW, BtnH, "Sim", function() {
+                WantedBgColor.r = 0
+                WantedBgColor.g = 1
+                WantedBgColor.b = 0
+            })
+            new Button(BtnPos.x + BtnW * 2, BtnPos.y, BtnW, BtnH, "Não", function() {
+                WantedBgColor.r = 1
+                WantedBgColor.g = 0
+                WantedBgColor.b = 0
+            })
 
 
             function SiteLoop(CurrentTime) {
@@ -77,13 +168,36 @@
                 LastTime = CurrentTime;
 
 
-                CanvasContext.clearRect(0, 0, Canvas.width, Canvas.height);
+                for (var l = 0; l < Buttons.length; l++) {
+                    Buttons[l].Update();
+                }
+
+
+                CanvasContext.shadowOffsetX = 8
+                CanvasContext.shadowOffsetY = 8
+                CanvasContext.shadowColor = "black"
+                CanvasContext.shadowBlur = 0
+
+
+                StructBgColor.r = lerp(StructBgColor.r, WantedBgColor.r, 6)
+                StructBgColor.g = lerp(StructBgColor.g, WantedBgColor.g, 6)
+                StructBgColor.b = lerp(StructBgColor.b, WantedBgColor.b, 6)
+                BgColor = "rgb(" + String(StructBgColor.r * 255) + "," + String(StructBgColor.g * 255) + "," + String(StructBgColor.b * 255) + ")"
+
+
+                CanvasContext.fillStyle = BgColor
+                CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
+
+
+                CanvasContext.fillRect(MousePos.x, MousePos.y, 32, 32)
 
 
                 const MainTextSpeedUp = 2
                 var FontSize = 86 + 8 * Math.cos(Time * MainTextSpeedUp)
                 CanvasContext.font = String(FontSize) + "px 'Vhs Gothic'"
                 CanvasContext.textAlign = "center"
+                CanvasContext.shadowOffsetX = FontSize / 16
+                CanvasContext.shadowOffsetY = FontSize / 16
 
 
                 const TotalRep = 10 + 5 * Math.cos(Time * MainTextSpeedUp / 2)
@@ -106,6 +220,8 @@
                 CanvasContext.font = String(32) + "px PixelOperator"
                 CanvasContext.fillStyle = "white"
                 CanvasContext.textAlign = "left"
+                CanvasContext.shadowOffsetX = 16
+                CanvasContext.shadowOffsetY = 16
                 CanvasContext.save()
                     CanvasContext.translate(256, 512)
                     CanvasContext.rotate(0.05 * Math.sin(Time))
@@ -114,6 +230,8 @@
                 CanvasContext.restore()
 
 
+                CanvasContext.shadowOffsetX = 4
+                CanvasContext.shadowOffsetY = 4
                 CanvasContext.fillStyle = "black"
                 CanvasContext.fillText("EU NÃO TO SENDO PRESO, OK?", 8+2, 512 + EUImg.height / 2+2)
                 CanvasContext.fillStyle = "white"
@@ -122,6 +240,8 @@
 
                 CanvasContext.font = String(128) + "px PixelOperator"
                 CanvasContext.textAlign = "center"
+                CanvasContext.shadowOffsetX = 8
+                CanvasContext.shadowOffsetY = 8
                 CanvasContext.fillText("^ EU ^", EUImg.width / 2, 512 + 32 + EUImg.height / 2 + 128 + 16 * Math.sin(Time))
 
 
@@ -169,6 +289,10 @@
                     CanvasContext.translate(Canvas.width - TextMes.width / 2 - 16 + 16 * Math.sin(Time + (i/2)), CurrentY)
 
 
+                    CanvasContext.shadowOffsetX = FontSize / 16
+                    CanvasContext.shadowOffsetY = FontSize / 16
+
+
                     CanvasContext.fillText(CurrentInfo.Text, 0, 0)
 
 
@@ -180,6 +304,10 @@
                     if (EndChar == ")" || EndChar == "(") {DrawnSubTxt = CurrentInfo.SubTxt}
 
 
+                    CanvasContext.shadowOffsetX = 2
+                    CanvasContext.shadowOffsetY = 2
+
+
                     CanvasContext.fillText(DrawnSubTxt, 0, 32)
 
 
@@ -187,7 +315,24 @@
                 }
 
 
+                CanvasContext.shadowOffsetX = 2
+                CanvasContext.shadowOffsetY = 2
+                CanvasContext.fillStyle = "white"
+                CanvasContext.fillText("Gostou do meu saite?", BtnPos.x, BtnPos.y + Number(CanvasContext.font.substring(0, CanvasContext.font.indexOf("px"))) / 2)
+
+
+                CanvasContext.shadowOffsetX = 8
+                CanvasContext.shadowOffsetY = 8
+
+
+                for (var l = 0; l < Buttons.length; l++) {
+                    Buttons[l].Draw();
+                }
+
+
                 Time += 1 * Delta
+                OldMouseClicked = MouseClicked
+                MouseClicked = false
                 requestAnimationFrame(SiteLoop)
             }
 
@@ -213,6 +358,9 @@
                 : num >= max
                 ? max
                 : num
+            }
+            function lerp(A, B, Force) {
+                return A + (B - A) * (1 - Math.exp(-Force * Delta));
             }
 
 
