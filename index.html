@@ -219,16 +219,18 @@
                 CanvasContext.textAlign = "left"
                 CanvasContext.shadowOffsetX = 16
                 CanvasContext.shadowOffsetY = 16
-                CanvasContext.save()
-                    CanvasContext.translate(256, 512)
-                    CanvasContext.rotate(0.05 * Math.sin(Time))
-                    CanvasContext.scale(1 + 0.05 * Math.cos(Time), 1 + 0.05 * Math.sin(Time / 2))
-
-
                     for (var r = 0; r < 16; r++) {
-                        CanvasContext.drawImage(EUImg, -EUImg.width / 2 + r*4, -EUImg.height / 2 - r*4)
+                        CanvasContext.save()
+                        CanvasContext.translate(256, 512)
+                        CanvasContext.rotate(0.05 * Math.sin(Time))
+                        CanvasContext.scale(1 + 0.05 * Math.cos(Time), 1 + 0.05 * Math.sin(Time / 2))
+                            
+                        
+                            CanvasContext.drawImage(EUImg, -EUImg.width / 2 + r*4, -EUImg.height / 2 - r*4)
+                        
+                        
+                        CanvasContext.restore()
                     }
-                CanvasContext.restore()
 
 
                 CanvasContext.shadowOffsetX = 4
