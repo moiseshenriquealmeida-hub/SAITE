@@ -226,8 +226,17 @@
 
 
                     for (var r = 0; r < 16; r++) {
+                        CanvasContext.drawImage(EUImg, -EUImg.width / 2 + r*4, -EUImg.height / 2 - r*4)
+
+
+                        CanvasContext.globalCompositeOperation = "source-in";
+
+
                         CanvasContext.fillStyle = "hsv(0, 0" + String(100 * (r / 16)) + ")"
-                        CanvasContext.drawImage(EUImg, -EUImg.width / 2 + r*4, -EUImg.height / 2 + r*4)
+                        CanvasContext.fillRect(0, 0, EUImg.width, EUImg.height);
+
+
+                        CanvasContext.globalCompositeOperation = "source-over";
                     }
                 CanvasContext.restore()
 
