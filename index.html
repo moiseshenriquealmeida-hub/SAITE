@@ -223,7 +223,12 @@
                     CanvasContext.translate(256, 512)
                     CanvasContext.rotate(0.05 * Math.sin(Time))
                     CanvasContext.scale(1 + 0.05 * Math.cos(Time), 1 + 0.05 * Math.sin(Time / 2))
-                    CanvasContext.drawImage(EUImg, -EUImg.width / 2, -EUImg.height / 2)
+
+
+                    for (var r = 0; r < 16; r++) {
+                        CanvasContext.fillStyle = "hsv(0, 0" + String(100 * (r / 16)) + ")"
+                        CanvasContext.drawImage(EUImg, -EUImg.width / 2 + r*4, -EUImg.height / 2 + r*4)
+                    }
                 CanvasContext.restore()
 
 
