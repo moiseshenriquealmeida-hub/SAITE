@@ -173,7 +173,7 @@
                 }
 
 
-                CanvasContext.translate(0, 1)
+                CanvasContext.translate(0, Scroll)
 
 
                 CanvasContext.shadowOffsetX = 8
@@ -334,6 +334,9 @@
                 for (var l = 0; l < Buttons.length; l++) {
                     Buttons[l].Draw();
                 }
+
+
+                CanvasContext.translate(0, -Scroll)
 
 
                 Time += 1 * Delta
