@@ -25,9 +25,9 @@
 
             Canvas.addEventListener("click", MouseClick)
             Canvas.addEventListener("mousemove", MouseMove)
-            Canvas.addEventListener("scroll", function(ev) {
+            Canvas.onwheel = function(ev) {
                 Scroll += ev.deltaY;
-            })
+            }
 
 
             class Button {
