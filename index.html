@@ -176,9 +176,6 @@
                 }
 
 
-                CanvasContext.translate(0, Scroll)
-
-
                 CanvasContext.shadowOffsetX = 8
                 CanvasContext.shadowOffsetY = 8
                 CanvasContext.shadowColor = "black"
@@ -193,6 +190,9 @@
 
                 CanvasContext.fillStyle = BgColor
                 CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
+
+
+                CanvasContext.translate(0, Scroll)
 
 
                 const MainTextSpeedUp = 2
