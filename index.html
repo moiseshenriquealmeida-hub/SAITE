@@ -26,6 +26,7 @@
             Canvas.addEventListener("click", MouseClick)
             Canvas.addEventListener("mousemove", MouseMove)
             Canvas.onwheel = function(ev) {
+                Scroll = clamp(Scroll, 0, WinH * 4)
                 Scroll -= ev.deltaY;
             }
 
