@@ -21,12 +21,13 @@
             var MouseY = 0;
             var MousePressed = false
             var Buttons = []
+            var MaxScroll = WinH * 4
 
 
             Canvas.addEventListener("click", MouseClick)
             Canvas.addEventListener("mousemove", MouseMove)
             Canvas.onwheel = function(ev) {
-                Scroll = clamp(Scroll, -WinH * 4, 0)
+                Scroll = clamp(Scroll, -MaxScroll, 0)
                 Scroll -= ev.deltaY;
             }
 
