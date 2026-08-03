@@ -22,6 +22,7 @@
             var MousePressed = false
             var Buttons = []
             var MaxScroll = WinH * 4
+            var UsedScroll = 0
 
 
             Canvas.addEventListener("click", MouseClick)
@@ -50,7 +51,7 @@
                 
                 Update() {
                     const usedX = this.x - (this.w + this.wAdd) / 2
-                    const usedY = this.y + Scroll - (this.h + this.hAdd) / 2
+                    const usedY = this.y + UsedScroll - (this.h + this.hAdd) / 2
                     const hover = MousePos.x > usedX && MousePos.x < usedX + (this.w + this.wAdd) && MousePos.y > usedY && MousePos.y < usedY + (this.h + this.hAdd)
                     
                     
@@ -174,6 +175,9 @@
                 LastTime = CurrentTime;
 
 
+                UsedScroll = lerp(UsedScroll, Scroll, 6)
+
+
                 for (var l = 0; l < Buttons.length; l++) {
                     Buttons[l].Update();
                 }
@@ -195,7 +199,7 @@
                 CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
 
 
-                CanvasContext.translate(0, Scroll)
+                CanvasContext.translate(0, UsedScroll)
 
 
                 const MainTextSpeedUp = 2
