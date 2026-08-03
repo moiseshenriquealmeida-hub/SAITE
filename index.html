@@ -1,389 +1,441 @@
 <!DOCTYPE html>
-
-
 <html lang="pt-br">
     <head>
-        <title>MOISES BLOG</title>
+        <title>MOISES BLOG - ESTETIC EDITION</title>
         <meta charset="UTF-8">
-        <meta name="VIEW" content="width=1280 initial-scale=1.0">
-        <link href="./style.css" rel="stylesheet" type="text/css" media="all">
+        <meta name="viewport" content="width=1280, initial-scale=1.0">
+        <!-- Importando a fonte VT323 -->
+        <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+        <style>
+            body, html { 
+                margin: 0; 
+                padding: 0; 
+                background-color: #000; 
+                overflow: hidden; 
+                min-height: 100vh; 
+                display: flex;
+                justify-content: center; 
+                align-items: center;     
+            }
+
+            canvas {
+                display: block;
+                max-width: 100vw;
+                max-height: 100vh;
+                width: auto;
+                height: auto;
+                object-fit: contain; 
+                image-rendering: pixelated; 
+            }
+        </style>
     </head>
     <body>
         <script>
-            const WinW = 1280*1.5
-            const WinH = 720
-            const Canvas = document.createElement("canvas");
-            const CanvasContext = Canvas.getContext("2d")
-            var Time = 0
-            var LastTime = 0;
-            var Delta = 0;
-            var MouseX = 0;
-            var MouseY = 0;
-            var MousePressed = false
-            var Buttons = []
-            var MaxScroll = WinH * 4
-            var UsedScroll = 0
+            document.fonts.load('10pt "VT323"').then(() => {
+                requestAnimationFrame(SiteLoop);
+            });
 
-
-            Canvas.addEventListener("click", MouseClick)
-            Canvas.addEventListener("mousemove", MouseMove)
-            Canvas.onwheel = function(ev) {
-                Scroll = clamp(Scroll, -MaxScroll, 0)
-                Scroll -= ev.deltaY;
-            }
-
-
-            class Button {
-                constructor(x, y, w, h, text, pressFunc) {
-                    this.x = x
-                    this.y = y
-                    this.w = w
-                    this.h = h
-                    this.wAdd = 0
-                    this.hAdd = 0
-                    this.hovered = false
-                    this.text = text
-                    this.rot = 0
-                    this.pressFunc = pressFunc
-                    Buttons.push(this)
-                }
-                
-                
-                Update() {
-                    const usedX = this.x - (this.w + this.wAdd) / 2
-                    const usedY = this.y + UsedScroll - (this.h + this.hAdd) / 2
-                    const hover = MousePos.x > usedX && MousePos.x < usedX + (this.w + this.wAdd) && MousePos.y > usedY && MousePos.y < usedY + (this.h + this.hAdd)
-                    
-                    
-                    if (!this.hovered && hover) {
-                        this.wAdd = this.w * 1.25
-                        this.hAdd = this.h * 1.25
-                    }
-                    if (this.hovered && !hover) {
-                        this.wAdd = -this.w * 0.25
-                        this.hAdd = -this.h * 0.25
-                    }
-                    
-                    
-                    this.hovered = hover
-                
-                    
-                    if (this.hovered) {
-                        this.rot += (OldMousePos.x - MousePos.x) / 500
-                        
-                        
-                        if (MouseClicked && !OldMouseClicked) {
-                            this.wAdd = -this.w * 0.25
-                            this.hAdd = -this.h * 0.25
-                            this.pressFunc()
-                        }
-                    }
-                    
-                    
-                    this.rot = lerp(this.rot, 0, 6)
-                    this.wAdd = lerp(this.wAdd, 0, 6)
-                    this.hAdd = lerp(this.hAdd, 0, 6)
-                }
-                
-                
-                Draw() {
-                    CanvasContext.fillStyle = "black"
-                //    CanvasContext.rotate(this.rot)
-                    CanvasContext.fillRect(this.x - (this.w + this.wAdd) / 2, this.y - (this.h + this.hAdd) / 2, this.w + this.wAdd, this.h + this.hAdd)
-                    CanvasContext.strokeStyle = "white"
-                    CanvasContext.fillStyle = "white"
-                    CanvasContext.strokeRect(this.x - (this.w + this.wAdd) / 2, this.y - (this.h + this.hAdd) / 2, this.w + this.wAdd, this.h + this.hAdd)
-                    
-                    
-                    const scl = (this.w + this.wAdd) / this.w
-                    CanvasContext.font = String(64 * scl) + "px PixelOperator";
-                    CanvasContext.fillText(this.text, this.x, this.y + 16)
-                //    CanvasContext.rotate(-this.rot)
-                }
-            }
+            // Resolução INTERNA (21:9)
+            const WinW = 1280 * 1.5; // 1920
+            const WinH = 720 * 1.2;  // 864
             
+            const Canvas = document.createElement("canvas");
+            const CanvasContext = Canvas.getContext("2d");
+            
+            var Time = 0;
+            var LastTime = performance.now();
+            var Delta = 0;
+            var UsedScroll = 0;
+            var Scroll = 0;
+            var MaxScroll = 0; 
 
             Canvas.id = "SaiteCanvas";
             Canvas.width = WinW;
             Canvas.height = WinH;
-
-
-            document.children[0].appendChild(Canvas);
+            document.body.appendChild(Canvas);
+            
             CanvasContext.imageSmoothingEnabled = false;
-            CanvasContext.filter = 'none';
 
+            var MouseClicked = false;
+            var OldMouseClicked = false;
+            var MousePos = {x: 0, y: 0};
+            var OldMousePos = {x: 0, y: 0};
+            var Laike = false
 
-            var Scroll = 0;
-            var WantedScroll = 0;
-            var MouseClicked = false
-            var OldMouseClicked = false
-            var MousePos = {x: 0, y: 0}
-            var OldMousePos = {x: 0, y: 0}
-            CanvasContext.lineJoin = "round"
-            CanvasContext.lineWidth = 4
-
-
-            function MouseClick(ev) {
-                MouseClicked = true
-            }
-            function MouseMove(ev) {
-                //EXISTEM RAZÕES DO PORQUE EU ODEIO JAVASCRIPT
-
-
+            Canvas.addEventListener("click", () => { MouseClicked = true; });
+            Canvas.addEventListener("mousemove", (ev) => {
                 const rect = Canvas.getBoundingClientRect();
-
-                
                 const scaleX = Canvas.width / rect.width;
                 const scaleY = Canvas.height / rect.height;
-
-
                 OldMousePos.x = MousePos.x;
                 OldMousePos.y = MousePos.y;
-
-                
                 MousePos.x = (ev.clientX - rect.left) * scaleX;
                 MousePos.y = (ev.clientY - rect.top) * scaleY;
+            });
+
+            Canvas.onwheel = function(ev) {
+                Scroll -= ev.deltaY * 0.8; 
+                Scroll = clamp(Scroll, -MaxScroll, 0);
+            };
+
+            function fillPixelText(ctx, text, x, y, color, shadowColor, offsetX, offsetY) {
+                ctx.save();
+                ctx.fillStyle = shadowColor;
+                ctx.fillText(text, x + offsetX, y + offsetY);
+                ctx.fillStyle = color;
+                ctx.fillText(text, x, y);
+                ctx.restore();
             }
 
+            // ====== SISTEMA DE BOTÕES 8-BIT ======
+            var Buttons = [];
+            class Button {
+                constructor(x, y, w, h, text, pressFunc) {
+                    this.x = x; this.y = y; this.w = w; this.h = h;
+                    this.wAdd = 0; this.hAdd = 0;
+                    this.hovered = false;
+                    this.text = text; this.rot = 0;
+                    this.pressFunc = pressFunc;
+                    Buttons.push(this);
+                }
+                Update() {
+                    const usedX = this.x - (this.w + this.wAdd) / 2;
+                    const usedY = this.y + UsedScroll - (this.h + this.hAdd) / 2;
+                    const hover = MousePos.x > usedX && MousePos.x < usedX + (this.w + this.wAdd) && MousePos.y > usedY && MousePos.y < usedY + (this.h + this.hAdd);
+                    
+                    if (!this.hovered && hover) { this.wAdd = this.w * 0.2; this.hAdd = this.h * 0.2; }
+                    if (this.hovered && !hover) { this.wAdd = -this.w * 0.1; this.hAdd = -this.h * 0.1; }
+                    
+                    this.hovered = hover;
+                    if (this.hovered) {
+                        this.rot += (OldMousePos.x - MousePos.x) / 500;
+                        if (MouseClicked && !OldMouseClicked) {
+                            this.wAdd = -this.w * 0.25; this.hAdd = -this.h * 0.25;
+                            this.pressFunc();
+                        }
+                    }
+                    this.rot = lerp(this.rot, 0, 8);
+                    this.wAdd = lerp(this.wAdd, 0, 8);
+                    this.hAdd = lerp(this.hAdd, 0, 8);
+                }
+                Draw() {
+                    CanvasContext.save();
+                    CanvasContext.translate(this.x, this.y);
+                    CanvasContext.rotate(this.rot);
 
-            const EUImg = createImage("./EU.png", 407, 410)
-            var Likes = 0
+                    const finalW = this.w + this.wAdd;
+                    const finalH = this.h + this.hAdd;
+
+                    CanvasContext.fillStyle = "black";
+                    CanvasContext.fillRect(-finalW/2 + 8, -finalH/2 + 8, finalW, finalH);
+                    
+                    CanvasContext.fillStyle = this.hovered ? "white" : "black";
+                    CanvasContext.fillRect(-finalW/2, -finalH/2, finalW, finalH);
+                    
+                    CanvasContext.lineWidth = 6;
+                    CanvasContext.strokeStyle = "white";
+                    CanvasContext.strokeRect(-finalW/2, -finalH/2, finalW, finalH);
+                    
+                    const scl = finalW / this.w;
+                    CanvasContext.textAlign = "center";
+                    CanvasContext.textBaseline = "middle";
+                    CanvasContext.font = String(80 * scl) + "px VT323";
+                    
+                    fillPixelText(CanvasContext, this.text, 0, 4, (this.hovered ? "black" : "white"), "rgba(0,0,0,0.5)", 4, 4);
+
+                    CanvasContext.restore();
+                }
+            }
+
+            // ====== CAIXAS DE POSTAGEM ESTILO RPG 8-BIT ======
+            class Post {
+                constructor(x, y, w, h, title, contentDrawFunc) {
+                    this.x = x; this.y = y; this.w = w; this.h = h;
+                    this.title = title;
+                    this.contentDrawFunc = contentDrawFunc;
+                }
+
+                Draw() {
+                    CanvasContext.save();
+                    
+                    CanvasContext.fillStyle = "black";
+                    CanvasContext.fillRect(this.x + 16, this.y + 16, this.w, this.h);
+
+                    CanvasContext.fillStyle = "#0a0a0a"; 
+                    CanvasContext.fillRect(this.x, this.y, this.w, this.h);
+
+                    CanvasContext.lineWidth = 8;
+                    CanvasContext.strokeStyle = "white";
+                    CanvasContext.strokeRect(this.x, this.y, this.w, this.h);
+
+                    CanvasContext.fillStyle = "white";
+                    CanvasContext.fillRect(this.x, this.y, this.w, 80);
+
+                    CanvasContext.textAlign = "left";
+                    CanvasContext.textBaseline = "middle";
+                    CanvasContext.font = "56px VT323";
+                    fillPixelText(CanvasContext, this.title, this.x + 24, this.y + 40, "black", "rgba(0,0,0,0.2)", 2, 2);
+
+                    if (this.contentDrawFunc) { this.contentDrawFunc(this); }
+
+                    CanvasContext.restore();
+                }
+            }
+
+            const EUImg = createImage("./EU.png", 407, 410);
+            const EuImgHappy = createImage("./EU FELIZ.png", 407, 410);
+
+            // ====== SISTEMA DE ESTÉTICA DO FUNDO ======
+            var WantedColorA = {r: 0.02, g: 0.01, b: 0.05}; // Roxo Quase Preto
+            var WantedColorB = {r: 0.05, g: 0.02, b: 0.10}; // Roxo Escuro
+            
+            var StructColorA = {r: 0.02, g: 0.01, b: 0.05};
+            var StructColorB = {r: 0.05, g: 0.02, b: 0.10};
+
+            var PostsList = [];
+            var CurrentY = 40; 
+            const PostMargin = 60;
+            const PostW = WinW - 160; 
+            const PostX = 80;
+
+            // POST 1: SOBRE MIM + COSAS QUE EU FAÇO (DUAS COLUNAS LADO A LADO)
+            const AlturaSiteAntigo = 1000; 
+            PostsList.push(new Post(PostX, CurrentY, PostW, AlturaSiteAntigo, "BEM VINDO AO MEU SAITE", function(post) {
+                // COLUNA DA ESQUERDA: FOTO + TÍTULO ANIMADO
+                const ColEsquerdaX = post.x + 300;
+                
+                CanvasContext.textAlign = "center"; CanvasContext.textBaseline = "middle";
+                const MainTextSpeedUp = 2; 
+                var FontSize = 80 + 8 * Math.cos(Time * MainTextSpeedUp); 
+                CanvasContext.font = String(FontSize) + "px VT323";
+
+                const TotalRep = 8 + 4 * Math.cos(Time * MainTextSpeedUp / 2);
+                for (var r=0; r<TotalRep; r++) {
+                    CanvasContext.save();
+                    CanvasContext.fillStyle = 'hsl(0, 0%, ' + String(100 * (r / TotalRep)) + '%)';
+                    CanvasContext.translate(ColEsquerdaX + (4 * r * Math.cos(Time * MainTextSpeedUp)), post.y + 180 + FontSize + (4 * r * Math.sin(Time * MainTextSpeedUp)));
+                    CanvasContext.rotate(0.1 * Math.sin(Time * MainTextSpeedUp));
+                    fillPixelText(CanvasContext, "ESSE É O MEU SAITE", 0, -64, CanvasContext.fillStyle, "black", FontSize/16, FontSize/16);
+                    CanvasContext.restore();
+                }
+
+                // Foto do Moisés
+                const UsedImg = Laike ? EuImgHappy : EUImg
 
 
-            var BgColor = "black"
-            var WantedBgColor = {r: 0, g: 0, b: 0}
-            var StructBgColor = {r: 0, g: 0, b: 0}
+                for (var r = 0; r < 8; r++) {
+                    CanvasContext.save(); 
+                    CanvasContext.translate(ColEsquerdaX, post.y + 530);
+                    CanvasContext.rotate(0.05 * Math.sin(Time)); 
+                    CanvasContext.scale(1 + 0.05 * Math.cos(Time), 1 + 0.05 * Math.sin(Time / 2));
+                    if(UsedImg.complete) CanvasContext.drawImage(UsedImg, -UsedImg.width / 2 + r*6, -UsedImg.height / 2 - r*6);
+                    CanvasContext.restore();
+                }
+
+                let ImgH = UsedImg.complete ? UsedImg.height : 400;
+                
+                CanvasContext.font = "40px VT323"; CanvasContext.textAlign = "center";
+                fillPixelText(CanvasContext, "EU NÃO TO SENDO PRESO, OK?", ColEsquerdaX, post.y + 530 + ImgH / 2 + 30, "white", "black", 3, 3);
+
+                CanvasContext.font = "140px VT323";
+                fillPixelText(CanvasContext, "^ EU ^", ColEsquerdaX, post.y + 530 + ImgH / 2 + 120 + 16 * Math.sin(Time), "white", "black", 8, 8);
 
 
-            const BtnW = 128
-            const BtnH = 64
-            const BtnPos = {x : WinW / 2, y : 720 * 1.5 - 64 - BtnH - 16}
-            new Button(BtnPos.x - BtnW * 2, BtnPos.y, BtnW, BtnH, "Sim", function() {
-                WantedBgColor.r = 0
-                WantedBgColor.g = 1
-                WantedBgColor.b = 0
-            })
-            new Button(BtnPos.x + BtnW * 2, BtnPos.y, BtnW, BtnH, "Não", function() {
-                WantedBgColor.r = 1
-                WantedBgColor.g = 0
-                WantedBgColor.b = 0
-            })
+                // COLUNA DA DIREITA: INFORMAÇÕES "SOBRE MIM"
+                const MEInfos = [
+                    { Text: "Meu nome é Moises Henrique de Almeida", SubTxt: "Tem um acento em algum lugar mas eu não sei aonde" },
+                    { Text: "Faço jogo indie ruim ja faz uns 4 anos", SubTxt: "Alguns sem game engine inclusive" },
+                    { Text: "Eu desenho", SubTxt: "Não é bom" },
+                    { Text: "Sei usar Godot, Allegro 5, Raylib para fazer jogos", SubTxt: "Não recomendo aprender todos >:(" },
+                    { Text: "Programo em C, C++, C#, Python, JS, Zig, D, Odin", SubTxt: "Não recomendo aprender todos :)" },
+                ];
 
+                CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top"; 
+                let fSize = 52; 
+                CanvasContext.font = String(fSize) + "px VT323";
+                var InfoY = post.y + 160; 
+                let ColDireitaX = post.x + 620; // Alinhado perfeitamente na coluna direita do post
 
+                for (var i=0; i < MEInfos.length; i++) {
+                    CanvasContext.save();
+                    const CurrentInfo = MEInfos[i];
+                    
+                    CanvasContext.translate(ColDireitaX + 12 * Math.sin(Time + (i/2)), InfoY);
+
+                    fillPixelText(CanvasContext, CurrentInfo.Text, 0, 0, "#FFD700", "black", 3, 3);
+
+                    CanvasContext.font = "34px VT323";
+                    var DrawnSubTxt = "(" + CurrentInfo.SubTxt + ")";
+                    var EndChar = CurrentInfo.SubTxt.charAt(CurrentInfo.SubTxt.length - 1);
+                    if (EndChar == ")" || EndChar == "(") { DrawnSubTxt = CurrentInfo.SubTxt; }
+                    
+                    fillPixelText(CanvasContext, DrawnSubTxt, 0, fSize * 0.85, "#AAAAAA", "black", 2, 2);
+                    CanvasContext.restore();
+                    CanvasContext.font = String(fSize) + "px VT323";
+                    
+                    InfoY += (fSize * 2.1);
+                }
+
+                // O CÓDIGO QUEBRADO ESTAVA AQUI: eu havia deixado um CanvasContext.restore(); sobrando que estragava o scroll inteiro.
+
+                // PERGUNTA FINAL NO RODAPÉ DO POST
+                CanvasContext.textAlign = "center"; CanvasContext.textBaseline = "middle";
+                CanvasContext.font = "64px VT323";
+                fillPixelText(CanvasContext, "Gostou do meu saite?", post.x + post.w / 2, post.y + post.h - 180, "white", "black", 4, 4);
+            }));
+
+            // BOTÕES SIM / NÃO CENTRALIZADOS NO POST
+            const BtnW = 200; const BtnH = 80; const BtnPosY = CurrentY + AlturaSiteAntigo - 80; 
+            
+            new Button(WinW/2 - BtnW * 1.0, BtnPosY, BtnW, BtnH, "SIM", function() { 
+                WantedColorA = {r: 0.10, g: 0.40, b: 0.40}; // Ciano Escuro suave
+                WantedColorB = {r: 0.30, g: 0.60, b: 0.80}; // Azul Céu estético
+                Laike = true
+            });
+            
+            new Button(WinW/2 + BtnW * 1.0, BtnPosY, BtnW, BtnH, "NÃO", function() { 
+                WantedColorA = {r: 0.50, g: 0.10, b: 0.30}; // Magenta Profundo suave
+                WantedColorB = {r: 0.60, g: 0.30, b: 0.10}; // Laranja Neon suave
+                Laike = false
+            });
+
+            CurrentY += AlturaSiteAntigo + PostMargin; 
+
+            // POSTS TODO ABAIXO (LARGURA TOTAL CENTRALIZADA)
+            const fSizeTodo = "48px VT323";
+            
+            PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO AS PIADAS COM A SILMARA IMPACTAM CHRISTIAN FELIPE", function(post) {
+                CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
+                fillPixelTextWrapped(CanvasContext, "CHRISTIAN FELIPE PAROU DE FALAR COM UM TAL DE DERI LULZZ POR CAUSA DE PIADAS COM A\nSILMARA, ISSO NÂO É LEGAL, MAS SIM ILEGAL", post.x + 32, post.y + 120, PostW-16, 32, "white", "black", 2, 2);
+            }));
+            CurrentY += 300 + PostMargin;
+
+            PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO PIADAS COM A MARTA IMPACTAM A PRODUÇÃO MUSICAL DO EUMESMO", function(post) {
+                CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
+                fillPixelTextWrapped(CanvasContext, "EUMESMO PASSOU OS ULTIMOS 3 ANOS RECEBENDO PIADAS COM A MARTA, E NUNCA TEVE A OPORTUNIDADE DE FAZER UMA TAMBEM, MAS EU TENHO CERTEZA QUE ESSE É O SONHO DELE", post.x + 32, post.y + 120, PostW-16, 32, "white", "black", 2, 2);
+            }));
+            CurrentY += 300 + PostMargin;
+
+            PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO PIADAS", function(post) {
+                CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
+                fillPixelText(CanvasContext, "EU NÃO SEI OQUE ESCREVER AQUI :)", post.x + 32, post.y + 120, "white", "black", 2, 2);
+            }));
+            CurrentY += 300 + PostMargin;
+
+            const LastPost = PostsList[PostsList.length - 1];
+
+            MaxScroll = Math.max(
+                0,
+                LastPost.y + LastPost.h + PostMargin - WinH
+            );
+
+            // ====== SISTEMA DE ESTRELAS E FUNDO DINÂMICO ======
+            const Stars = [];
+            for (let i = 0; i < 200; i++) {
+                Stars.push({ x: Math.random() * WinW, y: Math.random() * WinH, z: Math.random() * 3 + 1 });
+            }
+
+            function DrawAestheticBackground() {
+                StructColorA.r = lerp(StructColorA.r, WantedColorA.r, 3); 
+                StructColorA.g = lerp(StructColorA.g, WantedColorA.g, 3); 
+                StructColorA.b = lerp(StructColorA.b, WantedColorA.b, 3);
+                
+                StructColorB.r = lerp(StructColorB.r, WantedColorB.r, 3); 
+                StructColorB.g = lerp(StructColorB.g, WantedColorB.g, 3); 
+                StructColorB.b = lerp(StructColorB.b, WantedColorB.b, 3);
+
+                const colA = `rgb(${StructColorA.r * 255}, ${StructColorA.g * 255}, ${StructColorA.b * 255})`;
+                const colB = `rgb(${StructColorB.r * 255}, ${StructColorB.g * 255}, ${StructColorB.b * 255})`;
+                
+                const grad = CanvasContext.createLinearGradient(0, 0, 0, Canvas.height);
+                grad.addColorStop(0, colA);
+                grad.addColorStop(1, colB);
+                
+                CanvasContext.fillStyle = grad;
+                CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
+
+                CanvasContext.fillStyle = "white";
+                for (let s of Stars) {
+                    let sy = s.y + (Time * 40 * s.z);
+                    let screenY = (sy + UsedScroll * (s.z * 0.3)) % WinH;
+                    if (screenY < 0) screenY += WinH; 
+                    let size = Math.floor(s.z) * 2; 
+                    CanvasContext.fillRect(Math.floor(s.x), Math.floor(screenY), size, size);
+                }
+            }
+
+            // ====== MAIN LOOP (Motor de Renderização) ======
             function SiteLoop(CurrentTime) {
                 Delta = clamp((CurrentTime - LastTime) / 1000, 0, 0.1);
                 LastTime = CurrentTime;
 
+                UsedScroll = lerp(UsedScroll, Scroll, 4);
 
-                UsedScroll = lerp(UsedScroll, Scroll, 6)
+                DrawAestheticBackground();
 
+                CanvasContext.save();
+                CanvasContext.translate(0, Math.floor(UsedScroll));
+
+                for (let p = 0; p < PostsList.length; p++) {
+                    PostsList[p].Draw();
+                }
 
                 for (var l = 0; l < Buttons.length; l++) {
                     Buttons[l].Update();
-                }
-
-
-                CanvasContext.shadowOffsetX = 8
-                CanvasContext.shadowOffsetY = 8
-                CanvasContext.shadowColor = "black"
-                CanvasContext.shadowBlur = 0
-
-
-                StructBgColor.r = lerp(StructBgColor.r, WantedBgColor.r, 6)
-                StructBgColor.g = lerp(StructBgColor.g, WantedBgColor.g, 6)
-                StructBgColor.b = lerp(StructBgColor.b, WantedBgColor.b, 6)
-                BgColor = "rgb(" + String(StructBgColor.r * 255) + "," + String(StructBgColor.g * 255) + "," + String(StructBgColor.b * 255) + ")"
-
-
-                CanvasContext.fillStyle = BgColor
-                CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
-
-
-                CanvasContext.translate(0, UsedScroll)
-
-
-                const MainTextSpeedUp = 2
-                var FontSize = 86 + 8 * Math.cos(Time * MainTextSpeedUp)
-                CanvasContext.font = String(FontSize) + "px 'Vhs Gothic'"
-                CanvasContext.textAlign = "center"
-                CanvasContext.shadowOffsetX = FontSize / 16
-                CanvasContext.shadowOffsetY = FontSize / 16
-
-
-                const TotalRep = 10 + 5 * Math.cos(Time * MainTextSpeedUp / 2)
-                for (var r=0; r<TotalRep; r++) {
-                    CanvasContext.save()
-                        const DrawnText = "ESSE É O MEU SAITE"
-                        const TextSize = CanvasContext.measureText(DrawnText)
-                        CanvasContext.fillStyle = 'hsl(0, 0%, ' + String(100 * (r / TotalRep)) + '%)'
-
-
-                        CanvasContext.translate(Canvas.width / 2 + (2 * r * Math.cos(Time * MainTextSpeedUp)), FontSize + (2 * r * Math.sin(Time * MainTextSpeedUp)))
-                        CanvasContext.rotate(0.1 * Math.sin(Time * MainTextSpeedUp))
-
-
-                        CanvasContext.fillText(DrawnText, 0, FontSize)
-                    CanvasContext.restore()
-                }
-
-
-                CanvasContext.font = String(32) + "px PixelOperator"
-                CanvasContext.fillStyle = "white"
-                CanvasContext.textAlign = "left"
-                CanvasContext.shadowOffsetX = 16
-                CanvasContext.shadowOffsetY = 16
-                    for (var r = 0; r < 16; r++) {
-                        CanvasContext.save()
-                        CanvasContext.translate(256, 512)
-                        CanvasContext.rotate(0.05 * Math.sin(Time))
-                        CanvasContext.scale(1 + 0.05 * Math.cos(Time), 1 + 0.05 * Math.sin(Time / 2))
-                            
-                        
-                            CanvasContext.drawImage(EUImg, -EUImg.width / 2 + r*4, -EUImg.height / 2 - r*4)
-                        
-                        
-                        CanvasContext.restore()
-                    }
-
-
-                CanvasContext.shadowOffsetX = 4
-                CanvasContext.shadowOffsetY = 4
-                CanvasContext.fillStyle = "black"
-                CanvasContext.fillText("EU NÃO TO SENDO PRESO, OK?", 8+2, 512 + EUImg.height / 2+2)
-                CanvasContext.fillStyle = "white"
-                CanvasContext.fillText("EU NÃO TO SENDO PRESO, OK?", 8, 512 + EUImg.height / 2)
-
-
-                CanvasContext.font = String(128) + "px PixelOperator"
-                CanvasContext.textAlign = "center"
-                CanvasContext.shadowOffsetX = 8
-                CanvasContext.shadowOffsetY = 8
-                CanvasContext.fillText("^ EU ^", EUImg.width / 2, 512 + 32 + EUImg.height / 2 + 128 + 16 * Math.sin(Time))
-
-
-                CanvasContext.font = String(32) + "px PixelOperator"
-
-
-                const MEInfos = [
-                    {
-                        Text: "Meu nome é Moises Henrique de Almeida",
-                        SubTxt: "Tem um acento em algum lugar mas eu não sei aonde",
-                    },
-                    {
-                        Text: "Faço jogo indie ruim ja faz uns 4 anos",
-                        SubTxt: "Sem game engine inclusive",
-                    },
-                    {
-                        Text: "Eu desenho",
-                        SubTxt: "Não é bom",
-                    },
-                    {
-                        Text: "Sei como usar Game Maker, Godot, Allegro 5, Raylib e SFML para fazer jogos",
-                        SubTxt: "Não recomendo aprender todos >:(",
-                    },
-                    {
-                        Text: "Sei como programar em C, C++, C#, Python, Javascript, Zig, D e Odin",
-                        SubTxt: "Não recomendo aprender todos :)",
-                    },
-                ]
-
-
-                CanvasContext.textAlign = "center"
-                var CurrentY = Canvas.height / 4;
-                for (var i=0; i < MEInfos.length; i++) {
-                    CanvasContext.save()
-
-
-                    const CurrentInfo = MEInfos[i]
-
-
-                    var TextMes = CanvasContext.measureText(CurrentInfo.Text)
-                    var FontSize = 45 * (Canvas.width / 2) / TextMes.width
-                    CanvasContext.font = String(FontSize) + "px PixelOperator"
-                    TextMes = CanvasContext.measureText(CurrentInfo.Text)
-                    CurrentY += (clamp(FontSize, 64+32, 128+64))
-                    CanvasContext.translate(Canvas.width - TextMes.width / 2 - 16 + 16 * Math.sin(Time + (i/2)), CurrentY)
-
-
-                    CanvasContext.shadowOffsetX = FontSize / 16
-                    CanvasContext.shadowOffsetY = FontSize / 16
-
-
-                    CanvasContext.fillText(CurrentInfo.Text, 0, 0)
-
-
-                    CanvasContext.font = String(32) + "px PixelOperator"
-                    var DrawnSubTxt = "(" + CurrentInfo.SubTxt + ")"
-
-
-                    var EndChar = CurrentInfo.SubTxt.charAt(CurrentInfo.SubTxt.length - 1)
-                    if (EndChar == ")" || EndChar == "(") {DrawnSubTxt = CurrentInfo.SubTxt}
-
-
-                    CanvasContext.shadowOffsetX = 2
-                    CanvasContext.shadowOffsetY = 2
-
-
-                    CanvasContext.fillText(DrawnSubTxt, 0, 32)
-
-
-                    CanvasContext.restore()
-                }
-
-
-                CanvasContext.shadowOffsetX = 2
-                CanvasContext.shadowOffsetY = 2
-                CanvasContext.fillStyle = "white"
-                CanvasContext.fillText("Gostou do meu saite?", BtnPos.x, BtnPos.y + Number(CanvasContext.font.substring(0, CanvasContext.font.indexOf("px"))) / 2)
-
-
-                CanvasContext.shadowOffsetX = 8
-                CanvasContext.shadowOffsetY = 8
-
-
-                for (var l = 0; l < Buttons.length; l++) {
                     Buttons[l].Draw();
                 }
 
+                CanvasContext.restore(); 
 
-                CanvasContext.translate(0, -UsedScroll)
-
-
-                Time += 1 * Delta
-                OldMouseClicked = MouseClicked
-                MouseClicked = false
-                requestAnimationFrame(SiteLoop)
+                Time += 1 * Delta;
+                OldMouseClicked = MouseClicked;
+                MouseClicked = false;
+                requestAnimationFrame(SiteLoop);
             }
-
-
-            //Funções pra me ajudar a não ficar louco
-
 
             function createImage(src, width, height, alt) {
                 let img = document.createElement("img");
-
-
-                img.src = src;
-                img.width = width;
-                img.height = height;
-                img.alt = alt;
-
-
+                img.src = src; img.width = width; img.height = height; img.alt = alt;
                 return img;
             }
             function clamp(num, min, max) {
-                return num <= min
-                ? min
-                : num >= max
-                ? max
-                : num
+                return Math.max(min, Math.min(max, num));
             }
-            function lerp(A, B, Force) {
-                return A + (B - A) * (1 - Math.exp(-Force * Delta));
+            function lerp(a, b, t) { return a + (b - a) * (1 - Math.exp(-t * Delta)); }
+            function fillPixelTextWrapped(ctx, text, x, y, maxWidth, lineHeight, color, shadowColor, shadowX = 2, shadowY = 2) {
+                ctx.save();
+
+                const words = text.split(" ");
+                let line = "";
+                let currentY = y;
+
+                for (let i = 0; i < words.length; i++) {
+                    const testLine = line + words[i] + " ";
+                    const testWidth = ctx.measureText(testLine).width;
+
+                    if (testWidth > maxWidth && line !== "") {
+                        ctx.fillStyle = shadowColor;
+                        ctx.fillText(line, x + shadowX, currentY + shadowY);
+
+                        ctx.fillStyle = color;
+                        ctx.fillText(line, x, currentY);
+
+                        line = words[i] + " ";
+                        currentY += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+
+                ctx.fillStyle = shadowColor;
+                ctx.fillText(line, x + shadowX, currentY + shadowY);
+
+                ctx.fillStyle = color;
+                ctx.fillText(line, x, currentY);
+
+                ctx.restore();
             }
 
-
-            requestAnimationFrame(SiteLoop)
         </script>
     </body>
 </html>
