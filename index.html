@@ -50,7 +50,7 @@
                 
                 Update() {
                     const usedX = this.x - (this.w + this.wAdd) / 2
-                    const usedY = this.y - (this.h + this.hAdd) / 2
+                    const usedY = this.y + Scroll - (this.h + this.hAdd) / 2
                     const hover = MousePos.x > usedX && MousePos.x < usedX + (this.w + this.wAdd) && MousePos.y > usedY && MousePos.y < usedY + (this.h + this.hAdd)
                     
                     
