@@ -318,7 +318,7 @@
 
             PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO ISSO AFETA O VASCO DA GRAMA", function(post) {
                 CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
-                fillPixelText(CanvasContext, "EM 9999 A.C FOI CRIADO O VASCO DA GRAMA, UM TIME DE VASCAINOS FUTEBOLISTAS, E SEUS PRINCIPAIS JOGADORES INCLUIRAM: \"JESUS CRISTO\", \"NAPOLEÃO BONAPARTE\", \"ABRAHAM LINCOLN\", \"ZUMBI DOS PALAMARES\"", post.x + 32, post.y + 120, "white", "black", 2, 2);            }));
+                fillPixelText(CanvasContext, "EM 9999 A.C FOI CRIADO O VASCO DA GRAMA, UM TIME DE VASCAINOS FUTEBOLISTAS,\nE SEUS PRINCIPAIS JOGADORES INCLUIRAM: \"JESUS CRISTO\", \"NAPOLEÃO BONAPARTE\", \"ABRAHAM LINCOLN\", \"ZUMBI DOS PALAMARES\"", post.x + 32, post.y + 120, "white", "black", 2, 2);            }));
             CurrentY += 300 + PostMargin;
 
             const LastPost = PostsList[PostsList.length - 1];
