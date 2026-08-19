@@ -35,9 +35,9 @@
                 requestAnimationFrame(SiteLoop);
             });
 
-            // Resolução INTERNA (21:9)
-            const WinW = 1280 * 1.5; // 1920
-            const WinH = 720 * 1.2;  // 864
+            
+            const WinW = 1280 * 1.5; 
+            const WinH = 720 * 1.2;  
             
             const Canvas = document.createElement("canvas");
             const CanvasContext = Canvas.getContext("2d");
@@ -87,7 +87,38 @@
                 ctx.restore();
             }
 
-            // ====== SISTEMA DE BOTÕES 8-BIT ======
+
+            function fillWaveText(ctx, text, x, y, color, shadowColor, offsetX, offsetY, waveForce, waveTime) {
+                ctx.save();
+                
+                let currentX = x;
+                
+                
+                ctx.fillStyle = shadowColor;
+                for (var i = 0; i < text.length; i++) {
+                    
+                    let charY = y + waveForce * Math.sin(waveTime + (i * 0.3)); 
+                    ctx.fillText(text[i], currentX + offsetX, charY + offsetY);
+                    
+                    
+                    currentX += ctx.measureText(text[i]).width;
+                }
+
+                
+                currentX = x; 
+
+                
+                ctx.fillStyle = color;
+                for (var i = 0; i < text.length; i++) {
+                    let charY = y + waveForce * Math.sin(waveTime + (i * 0.3));
+                    ctx.fillText(text[i], currentX, charY);
+                    currentX += ctx.measureText(text[i]).width;
+                }
+                
+                ctx.restore();
+            }
+
+            
             var Buttons = [];
             class Button {
                 constructor(x, y, w, h, text, pressFunc) {
@@ -147,7 +178,7 @@
                 }
             }
 
-            // ====== CAIXAS DE POSTAGEM ESTILO RPG 8-BIT ======
+            
             class Post {
                 constructor(x, y, w, h, title, contentDrawFunc) {
                     this.x = x; this.y = y; this.w = w; this.h = h;
@@ -174,7 +205,7 @@
                     CanvasContext.textAlign = "left";
                     CanvasContext.textBaseline = "middle";
                     CanvasContext.font = "56px VT323";
-                    fillPixelText(CanvasContext, this.title, this.x + 24, this.y + 40, "black", "rgba(0,0,0,0.2)", 2, 2);
+                    fillWaveText(CanvasContext, this.title, this.x + 24, this.y + 40, "black", "gray", 2, 2, 8, Time);
 
                     if (this.contentDrawFunc) { this.contentDrawFunc(this); }
 
@@ -185,9 +216,9 @@
             const EUImg = createImage("./EU.png", 407, 410);
             const EuImgHappy = createImage("./EU FELIZ.png", 407, 410);
 
-            // ====== SISTEMA DE ESTÉTICA DO FUNDO ======
-            var WantedColorA = {r: 0.02, g: 0.01, b: 0.05}; // Roxo Quase Preto
-            var WantedColorB = {r: 0.05, g: 0.02, b: 0.10}; // Roxo Escuro
+            
+            var WantedColorA = {r: 0.02, g: 0.01, b: 0.05}; 
+            var WantedColorB = {r: 0.05, g: 0.02, b: 0.10}; 
             
             var StructColorA = {r: 0.02, g: 0.01, b: 0.05};
             var StructColorB = {r: 0.05, g: 0.02, b: 0.10};
@@ -198,10 +229,10 @@
             const PostW = WinW - 160; 
             const PostX = 80;
 
-            // POST 1: SOBRE MIM + COSAS QUE EU FAÇO (DUAS COLUNAS LADO A LADO)
+            
             const AlturaSiteAntigo = 1000; 
             PostsList.push(new Post(PostX, CurrentY, PostW, AlturaSiteAntigo, "BEM VINDO AO MEU SAITE", function(post) {
-                // COLUNA DA ESQUERDA: FOTO + TÍTULO ANIMADO
+                
                 const ColEsquerdaX = post.x + 300;
                 
                 CanvasContext.textAlign = "center"; CanvasContext.textBaseline = "middle";
@@ -219,7 +250,7 @@
                     CanvasContext.restore();
                 }
 
-                // Foto do Moisés
+                
                 const UsedImg = Laike ? EuImgHappy : EUImg
 
 
@@ -241,7 +272,7 @@
                 fillPixelText(CanvasContext, "^ EU ^", ColEsquerdaX, post.y + 530 + ImgH / 2 + 120 + 16 * Math.sin(Time), "white", "black", 8, 8);
 
 
-                // COLUNA DA DIREITA: INFORMAÇÕES "SOBRE MIM"
+                
                 const MEInfos = [
                     { Text: "Meu nome é Moises Henrique de Almeida", SubTxt: "Tem um acento em algum lugar mas eu não sei aonde" },
                     { Text: "Faço jogo indie ruim ja faz uns 4 anos", SubTxt: "Alguns sem game engine inclusive" },
@@ -254,7 +285,7 @@
                 let fSize = 52; 
                 CanvasContext.font = String(fSize) + "px VT323";
                 var InfoY = post.y + 160; 
-                let ColDireitaX = post.x + 620; // Alinhado perfeitamente na coluna direita do post
+                let ColDireitaX = post.x + 620; 
 
                 for (var i=0; i < MEInfos.length; i++) {
                     CanvasContext.save();
@@ -276,32 +307,32 @@
                     InfoY += (fSize * 2.1);
                 }
 
-                // O CÓDIGO QUEBRADO ESTAVA AQUI: eu havia deixado um CanvasContext.restore(); sobrando que estragava o scroll inteiro.
+                
 
-                // PERGUNTA FINAL NO RODAPÉ DO POST
+                
                 CanvasContext.textAlign = "center"; CanvasContext.textBaseline = "middle";
                 CanvasContext.font = "64px VT323";
                 fillPixelText(CanvasContext, "Gostou do meu saite?", post.x + post.w / 2, post.y + post.h - 180, "white", "black", 4, 4);
             }));
 
-            // BOTÕES SIM / NÃO CENTRALIZADOS NO POST
+            
             const BtnW = 200; const BtnH = 80; const BtnPosY = CurrentY + AlturaSiteAntigo - 80; 
             
             new Button(WinW/2 - BtnW * 1.0, BtnPosY, BtnW, BtnH, "SIM", function() { 
-                WantedColorA = {r: 0.10, g: 0.40, b: 0.40}; // Ciano Escuro suave
-                WantedColorB = {r: 0.30, g: 0.60, b: 0.80}; // Azul Céu estético
+                WantedColorA = {r: 0.10, g: 0.40, b: 0.40}; 
+                WantedColorB = {r: 0.30, g: 0.60, b: 0.80}; 
                 Laike = true
             });
             
             new Button(WinW/2 + BtnW * 1.0, BtnPosY, BtnW, BtnH, "NÃO", function() { 
-                WantedColorA = {r: 0.50, g: 0.10, b: 0.30}; // Magenta Profundo suave
-                WantedColorB = {r: 0.60, g: 0.30, b: 0.10}; // Laranja Neon suave
+                WantedColorA = {r: 0.50, g: 0.10, b: 0.30}; 
+                WantedColorB = {r: 0.60, g: 0.30, b: 0.10}; 
                 Laike = false
             });
 
             CurrentY += AlturaSiteAntigo + PostMargin; 
 
-            // POSTS TODO ABAIXO (LARGURA TOTAL CENTRALIZADA)
+            
             const fSizeTodo = "48px VT323";
             
             PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO AS PIADAS COM A SILMARA IMPACTAM CHRISTIAN FELIPE", function(post) {
@@ -328,7 +359,7 @@
                 LastPost.y + LastPost.h + PostMargin - WinH
             );
 
-            // ====== SISTEMA DE ESTRELAS E FUNDO DINÂMICO ======
+            
             const Stars = [];
             for (let i = 0; i < 200; i++) {
                 Stars.push({ x: Math.random() * WinW, y: Math.random() * WinH, z: Math.random() * 3 + 1 });
@@ -363,7 +394,7 @@
                 }
             }
 
-            // ====== MAIN LOOP (Motor de Renderização) ======
+            
             function SiteLoop(CurrentTime) {
                 Delta = clamp((CurrentTime - LastTime) / 1000, 0, 0.1);
                 LastTime = CurrentTime;
