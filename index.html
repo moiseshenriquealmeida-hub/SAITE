@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
     <head>
-        <title>MOISES BLOG - ESTETIC EDITION</title>
+        <title>MOISES BLOG</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=1280, initial-scale=1.0">
         <!-- Importando a fonte VT323 -->
@@ -35,7 +35,6 @@
                 requestAnimationFrame(SiteLoop);
             });
 
-            
             const WinW = 1280 * 1.5; 
             const WinH = 720 * 1.2;  
             
@@ -87,38 +86,27 @@
                 ctx.restore();
             }
 
-
             function fillWaveText(ctx, text, x, y, color, shadowColor, offsetX, offsetY, waveForce, waveTime) {
                 ctx.save();
-                
                 let currentX = x;
-                
                 
                 ctx.fillStyle = shadowColor;
                 for (var i = 0; i < text.length; i++) {
-                    
-                    let charY = y + waveForce * Math.sin(waveTime + (i * 0.3)); 
+                    let charY = y + waveForce * Math.sin(waveTime + (i * 0.3));
                     ctx.fillText(text[i], currentX + offsetX, charY + offsetY);
-                    
-                    
                     currentX += ctx.measureText(text[i]).width;
                 }
 
-                
                 currentX = x; 
-
-                
                 ctx.fillStyle = color;
                 for (var i = 0; i < text.length; i++) {
                     let charY = y + waveForce * Math.sin(waveTime + (i * 0.3));
                     ctx.fillText(text[i], currentX, charY);
                     currentX += ctx.measureText(text[i]).width;
                 }
-                
                 ctx.restore();
             }
 
-            
             var Buttons = [];
             class Button {
                 constructor(x, y, w, h, text, pressFunc) {
@@ -178,12 +166,55 @@
                 }
             }
 
-            
             class Post {
-                constructor(x, y, w, h, title, contentDrawFunc) {
+                constructor(x, y, w, h, title, contentDrawFunc, customLikeCallback, customDislikeCallback) {
                     this.x = x; this.y = y; this.w = w; this.h = h;
                     this.title = title;
                     this.contentDrawFunc = contentDrawFunc;
+                    this.laikes = Math.floor(9999999 * Math.random())
+                    this.deslaikes = Math.floor(9999999 * Math.random())
+                    this.alreadyInteracted = false
+                    this.interaction = 0
+
+
+                    const btnW = 160*2*1.5; 
+                    const btnH = 64; 
+                    const btnY = this.y + this.h - 64; 
+                    const centerX = this.x + this.w / 2;
+                    
+                    new Button(centerX - ((btnW/2)+16), btnY, btnW, btnH, "LIKE :)", () => {
+                        if (this.alreadyInteracted) {
+                            if (this.interaction == 1) this.laikes --
+                            if (this.interaction == -1) {
+                                this.laikes ++
+                                this.deslaikes --
+                            }
+                            this.alreadyInteracted = false
+                            return
+                        }
+                        this.alreadyInteracted = true
+                        this.interaction = 1
+                        this.laikes += 1;
+                        if (customLikeCallback) customLikeCallback();
+                    });
+                    
+                    new Button(centerX + ((btnW/2)+16), btnY, btnW, btnH, "DISLIKE >:(", () => {
+                        if (this.alreadyInteracted) {
+                            if (this.interaction == 1) {
+                                this.deslaikes ++
+                                this.laikes --
+                            }
+                            if (this.interaction == -1) {
+                                this.deslaikes --
+                            }
+                            this.alreadyInteracted = false
+                            return
+                        }
+                        this.alreadyInteracted = true
+                        this.interaction = -1
+                        this.deslaikes += 1;
+                        if (customDislikeCallback) customDislikeCallback();
+                    });
                 }
 
                 Draw() {
@@ -209,6 +240,21 @@
 
                     if (this.contentDrawFunc) { this.contentDrawFunc(this); }
 
+                    
+                    CanvasContext.font = "40px VT323";
+                    CanvasContext.textAlign = "center";
+                    CanvasContext.textBaseline = "middle";
+                    
+                    const btnW = 160*2*1.5; 
+                    const centerX = this.x + this.w / 2;
+                    const btnY = this.y + this.h - 64;
+                    const LaikesWidth = CanvasContext.measureText(this.laikes + " LAIKES").width;
+                    const DeslaikesWidth = CanvasContext.measureText(this.deslaikes + " DESLAIKES").width;
+
+                    
+                    fillWaveText(CanvasContext, this.laikes + " LAIKES", centerX - ((btnW/2)+16) - LaikesWidth / 2, btnY - 50, "#44FF44", "black", 2, 2, 4, Time);
+                    fillWaveText(CanvasContext, this.deslaikes + " DESLAIKES", centerX + ((btnW/2)+16) - DeslaikesWidth / 2, btnY - 50, "#FF4444", "black", 2, 2, 4, Time);
+
                     CanvasContext.restore();
                 }
             }
@@ -216,7 +262,6 @@
             const EUImg = createImage("./EU.png", 407, 410);
             const EuImgHappy = createImage("./EU FELIZ.png", 407, 410);
 
-            
             var WantedColorA = {r: 0.02, g: 0.01, b: 0.05}; 
             var WantedColorB = {r: 0.05, g: 0.02, b: 0.10}; 
             
@@ -229,8 +274,9 @@
             const PostW = WinW - 160; 
             const PostX = 80;
 
-            
             const AlturaSiteAntigo = 1000; 
+            
+            
             PostsList.push(new Post(PostX, CurrentY, PostW, AlturaSiteAntigo, "BEM VINDO AO MEU SAITE", function(post) {
                 
                 const ColEsquerdaX = post.x + 300;
@@ -250,9 +296,7 @@
                     CanvasContext.restore();
                 }
 
-                
                 const UsedImg = Laike ? EuImgHappy : EUImg
-
 
                 for (var r = 0; r < 8; r++) {
                     CanvasContext.save(); 
@@ -271,8 +315,6 @@
                 CanvasContext.font = "140px VT323";
                 fillPixelText(CanvasContext, "^ EU ^", ColEsquerdaX, post.y + 530 + ImgH / 2 + 120 + 16 * Math.sin(Time), "white", "black", 8, 8);
 
-
-                
                 const MEInfos = [
                     { Text: "Meu nome é Moises Henrique de Almeida", SubTxt: "Tem um acento em algum lugar mas eu não sei aonde" },
                     { Text: "Faço jogo indie ruim ja faz uns 4 anos", SubTxt: "Alguns sem game engine inclusive" },
@@ -307,50 +349,48 @@
                     InfoY += (fSize * 2.1);
                 }
 
-                
-
-                
                 CanvasContext.textAlign = "center"; CanvasContext.textBaseline = "middle";
                 CanvasContext.font = "64px VT323";
                 fillPixelText(CanvasContext, "Gostou do meu saite?", post.x + post.w / 2, post.y + post.h - 180, "white", "black", 4, 4);
-            }));
-
+            }, 
             
-            const BtnW = 200; const BtnH = 80; const BtnPosY = CurrentY + AlturaSiteAntigo - 80; 
             
-            new Button(WinW/2 - BtnW * 1.0, BtnPosY, BtnW, BtnH, "SIM", function() { 
+            function() { 
                 WantedColorA = {r: 0.10, g: 0.40, b: 0.40}; 
                 WantedColorB = {r: 0.30, g: 0.60, b: 0.80}; 
-                Laike = true
-            });
+                Laike = true;
+            }, 
             
-            new Button(WinW/2 + BtnW * 1.0, BtnPosY, BtnW, BtnH, "NÃO", function() { 
+            function() { 
                 WantedColorA = {r: 0.50, g: 0.10, b: 0.30}; 
                 WantedColorB = {r: 0.60, g: 0.30, b: 0.10}; 
-                Laike = false
-            });
+                Laike = false;
+            }));
 
             CurrentY += AlturaSiteAntigo + PostMargin; 
 
-            
             const fSizeTodo = "48px VT323";
             
-            PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO AS PIADAS COM A SILMARA IMPACTAM CHRISTIAN FELIPE", function(post) {
+            
+            PostsList.push(new Post(PostX, CurrentY, PostW, 400, "COMO AS PIADAS COM A SILMARA IMPACTAM CHRISTIAN FELIPE", function(post) {
                 CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
                 fillPixelTextWrapped(CanvasContext, "CHRISTIAN FELIPE PAROU DE FALAR COM UM TAL DE DERI LULZZ POR CAUSA DE PIADAS COM A\nSILMARA, ISSO NÂO É LEGAL, MAS SIM ILEGAL", post.x + 32, post.y + 120, PostW-16, 32, "white", "black", 2, 2);
             }));
-            CurrentY += 300 + PostMargin;
+            CurrentY += 400 + PostMargin;
 
-            PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO PIADAS COM A MARTA IMPACTAM A PRODUÇÃO MUSICAL DO EUMESMO", function(post) {
+            
+            PostsList.push(new Post(PostX, CurrentY, PostW, 400, "COMO PIADAS COM A MARTA IMPACTAM A PRODUÇÃO MUSICAL DO EUMESMO", function(post) {
                 CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
                 fillPixelTextWrapped(CanvasContext, "EUMESMO PASSOU OS ULTIMOS 3 ANOS RECEBENDO PIADAS COM A MARTA, E NUNCA TEVE A OPORTUNIDADE DE FAZER UMA TAMBEM, MAS EU TENHO CERTEZA QUE ESSE É O SONHO DELE", post.x + 32, post.y + 120, PostW-16, 32, "white", "black", 2, 2);
             }));
-            CurrentY += 300 + PostMargin;
+            CurrentY += 400 + PostMargin;
 
-            PostsList.push(new Post(PostX, CurrentY, PostW, 300, "COMO ISSO AFETA O VASCO DA GRAMA", function(post) {
+            
+            PostsList.push(new Post(PostX, CurrentY, PostW, 400, "COMO ISSO AFETA O VASCO DA GRAMA", function(post) {
                 CanvasContext.font = fSizeTodo; CanvasContext.textAlign = "left"; CanvasContext.textBaseline = "top";
-                fillPixelTextWrapped(CanvasContext, "EM 9999 A.C FOI CRIADO O VASCO DA GRAMA, UM TIME DE VASCAINOS FUTEBOLISTAS,\nE SEUS PRINCIPAIS JOGADORES INCLUIRAM: \"JESUS CRISTO\", \"NAPOLEÃO BONAPARTE\", \"ABRAHAM LINCOLN\", \"ZUMBI DOS PALAMARES\"", post.x + 32, post.y + 120, PostW, 32, "white", "black", 2, 2);}));
-            CurrentY += 300 + PostMargin;
+                fillPixelTextWrapped(CanvasContext, "EM 9999 A.C FOI CRIADO O VASCO DA GRAMA, UM TIME DE VASCAINOS FUTEBOLISTAS,\nE SEUS PRINCIPAIS JOGADORES INCLUIRAM: \"JESUS CRISTO\", \"NAPOLEÃO BONAPARTE\", \"ABRAHAM LINCOLN\", \"ZUMBI DOS PALAMARES\"", post.x + 32, post.y + 120, PostW, 32, "white", "black", 2, 2);
+            }));
+            CurrentY += 400 + PostMargin;
 
             const LastPost = PostsList[PostsList.length - 1];
 
@@ -359,7 +399,6 @@
                 LastPost.y + LastPost.h + PostMargin - WinH
             );
 
-            
             const Stars = [];
             for (let i = 0; i < 200; i++) {
                 Stars.push({ x: Math.random() * WinW, y: Math.random() * WinH, z: Math.random() * 3 + 1 });
@@ -394,7 +433,6 @@
                 }
             }
 
-            
             function SiteLoop(CurrentTime) {
                 Delta = clamp((CurrentTime - LastTime) / 1000, 0, 0.1);
                 LastTime = CurrentTime;
